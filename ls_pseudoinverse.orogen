@@ -1,0 +1,56 @@
+name "ls_pseudoinverse"
+
+
+ using_library "adap_parameters_estimator"
+ using_library "motion_model"
+ 
+ import_types_from "adap_parameters_estimator/adap_dataTypes.h"
+ import_types_from "motion_model/MotionModel.hpp"
+
+ import_types_from "base"
+
+
+task_context "Task" do
+    
+    needs_configuration
+
+   #############################################################
+   #
+   # Properties
+   #
+   #############################################################       
+   	
+        #degree of freedom. If UNINITIALISED the method should identify
+        property "dofs", "adap_parameters_estimator::DOFS", :SURGE     
+	
+   
+   #############################################################
+   #
+   # Input
+   #
+   #############################################################	
+		
+    
+    input_port "thruster_samples", "base/samples/Joints"
+	    doc "Samples of thruster actions"
+	
+    input_port "speed_samples", "base/samples/RigidBodyState"
+		doc "Measured intput containing position, velocity, orientation"
+
+   #############################################################
+   #
+   # Output
+   #
+   #############################################################
+   
+   
+    output_port "parameters", "adap_parameters_estimator/Parameters"
+    	doc "paremeters of the dynamic motion model"
+   
+    	
+    output_port "relativ_error", "double"
+    	doc "Ax=b. relativ_error = (A*x-b).norm/b.norm"
+
+    
+    port_driven "speed_samples"
+end
