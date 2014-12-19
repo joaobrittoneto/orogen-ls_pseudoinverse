@@ -4,6 +4,13 @@
 #define LS_PSEUDOINVERSE_TASK_TASK_HPP
 
 #include "ls_pseudoinverse/TaskBase.hpp"
+#include "ls_pseudoinverse/ls_pseudoinverse.hpp"
+#include "adap_parameters_estimator/adap_dataTypes.h"
+#include "adap_parameters_estimator/adap_parameters.hpp"
+#include "adap_samples_input/samples_dataType.h"
+#include "base/samples/RigidBodyState.hpp"
+#include "base/samples/RigidBodyAcceleration.hpp"
+#include "base/samples/Joints.hpp"
 
 namespace ls_pseudoinverse {
 
@@ -26,7 +33,7 @@ namespace ls_pseudoinverse {
 	friend class TaskBase;
     protected:
 
-
+	ls_pseudoinverse::LS_Pseudo *ls_method;
 
     public:
         /** TaskContext constructor for Task
