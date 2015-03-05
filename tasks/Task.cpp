@@ -138,7 +138,7 @@ void Task::updateHook()
 
     if(doit && (t_now-new_dyn)>t_10)
        {
-    	std::cout<<std::endl<< "queuOfDyn.size: "<< queueOfDyn.size() <<std::endl;
+    	//std::cout<<std::endl<< "queuOfDyn.size: "<< queueOfDyn.size() <<std::endl;
     	last_dynamic = queueOfDyn.front();
     	static int dyn_diff = 0;
 
@@ -208,8 +208,8 @@ void Task::updateHook()
     	}
 
 */
-    	std::cout<<std::endl<< "dyn_diff: "<< dyn_diff <<std::endl;
-    	std::cout<<std::endl<< "dyn_samples: "<< dyn_samples <<std::endl;
+    	//std::cout<<std::endl<< "dyn_diff: "<< dyn_diff <<std::endl;
+    	//std::cout<<std::endl<< "dyn_samples: "<< dyn_samples <<std::endl;
 
     	//std::cout<<std::endl<< "force_rbs: "<< force_rbs <<std::endl;
 
