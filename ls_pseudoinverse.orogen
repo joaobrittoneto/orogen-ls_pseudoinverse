@@ -38,16 +38,16 @@ task_context "Task" do
 		
     
     #input_port "forces_samples", "base/samples/Joints"
-	#    doc "Samples of thruster actions"
+	#doc "Samples of thruster actions"
 	
     #input_port "speed_samples", "base/samples/RigidBodyState"
-	#	doc "Measured intput containing position, velocity, orientation"
+	#doc "Measured intput containing position, velocity, orientation"
 		
-	#input_port "acceleration_samples", "base/samples/RigidBodyAcceleration"
-	#	doc "Measured intput containing acceleration"	
+    #input_port "acceleration_samples", "base/samples/RigidBodyAcceleration"
+	#doc "Measured intput containing acceleration"	
 		
-	input_port "dynamic_samples", "adap_samples_input::DynamicAUV"
-		doc "Measured input containing acceleration, velocity and force"	
+    input_port "dynamic_samples", "adap_samples_input::DynamicAUV"
+	    doc "Measured input containing acceleration, velocity and force"	
 
    #############################################################
    #
