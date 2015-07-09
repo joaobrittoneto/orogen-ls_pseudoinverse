@@ -35,7 +35,16 @@ namespace ls_pseudoinverse {
 
 	ls_pseudoinverse::LS_Pseudo *ls_method;
 
+	adap_parameters_estimator::DOFS dof;
+	 bool first_time;
+	 std::queue<adap_samples_input::DynamicAUV> queueOfDyn;
+	 base::Time new_dyn;
+	 bool doit;
+
+
     public:
+
+
         /** TaskContext constructor for Task
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.

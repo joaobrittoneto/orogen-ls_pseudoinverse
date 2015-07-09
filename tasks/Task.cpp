@@ -31,8 +31,12 @@ bool Task::configureHook()
         return false;
     else
     {
-    	adap_parameters_estimator::DOFS dof = _dof.get();
+    	dof = _dof.get();
+
     	ls_method = new LS_Pseudo(dof);
+
+    	first_time = true;
+    	doit = false;
 
     	return true;
     }
@@ -46,26 +50,10 @@ bool Task::startHook()
 void Task::updateHook()
 {
     TaskBase::updateHook();
-    static bool first_time = true;
 
-   // static std::queue<base::samples::RigidBodyState>		queueOfRBS;
-   // static std::queue<base::samples::RigidBodyAcceleration>	queueOfRBA;
-   // static std::queue<base::samples::Joints> 				queueOfForces;
-    static std::queue<adap_samples_input::DynamicAUV> 		queueOfDyn;
-
-   // base::samples::RigidBodyState 		 RBS;
-   // base::samples::RigidBodyAcceleration RBA;
-   // base::samples::Joints 				 force;
     adap_samples_input::DynamicAUV dynamic;
     adap_samples_input::DynamicAUV last_dynamic;
 
-
-   // static base::Time new_vel;
-   // static base::Time new_acc;
-   // static base::Time new_for;
-    static base::Time new_dyn;
-
-    static bool doit = false;
     base::MatrixXd parameters;
     parameters.resize(4,1);
     double error;
@@ -74,51 +62,10 @@ void Task::updateHook()
     {
     	while(!queueOfDyn.empty())
     		queueOfDyn.pop();
-    //	while(!queueOfForces.empty())
-    //		queueOfForces.pop();
-    //	while(!queueOfRBA.empty())
-    //		queueOfRBA.pop();
-    //	while(!queueOfRBS.empty())
-    //		queueOfRBS.pop();
     	first_time = false;
     }
 
-/*
-	 while (_speed_samples.read(RBS) == RTT::NewData)
-       {
-       	queueOfRBS.push(RBS);
-       	new_vel = base::Time::now();
-       	doit = true;
-       }
 
-
-    while (_acceleration_samples.read(RBA) == RTT::NewData)
-       {
-       queueOfRBA.push(RBA);
-       new_acc = base::Time::now();
-       }
-
-    while (_forces_samples.read(force) == RTT::NewData)
-       {
-       queueOfForces.push(force);
-       new_for = base::Time::now();
-       }
-
-	*/
- /*   static int samples = 0;
-    while (_speed_samples.read(RBS) == RTT::NewData && _acceleration_samples.read(RBA) == RTT::NewData && _forces_samples.read(force) == RTT::NewData)
-    {
-    	queueOfRBS.push(RBS);
-    	queueOfRBA.push(RBA);
-    	queueOfForces.push(force);
-
-    	new_vel = base::Time::now();
-    	doit = true;
-
-    	samples++;
-
-    }
-*/
     static int dyn_samples = 0;
     while (_dynamic_samples.read(dynamic) == RTT::NewData )
        {
@@ -140,80 +87,45 @@ void Task::updateHook()
        {
     	//std::cout<<std::endl<< "queuOfDyn.size: "<< queueOfDyn.size() <<std::endl;
     	last_dynamic = queueOfDyn.front();
-    	static int dyn_diff = 0;
+    	//static int dyn_diff = 0;
 
     	ls_method->ls_solution(queueOfDyn, parameters, error);
 
-    	while(!queueOfDyn.empty())
-    	    	{
+    	adap_parameters_estimator::Parameters modelParameters;
 
+    	// Initialize output parameters
+    	for (int i=0; i<6; i++)
+    						{
+    						 modelParameters.inertiaCoeff[i].positive = 1;
+    						 modelParameters.inertiaCoeff[i].negative = 1;
+    						 modelParameters.quadraticDampingCoeff[i].positive = 0;
+    						 modelParameters.quadraticDampingCoeff[i].negative = 0;
+    						 modelParameters.linearDampingCoeff[i].positive = 0;
+    						 modelParameters.linearDampingCoeff[i].negative = 0;
+    						}
+    	modelParameters.gravityAndBuoyancy = base::VectorXd::Zero(6);
+    	modelParameters.coriolisCentripetalMatrix = base::MatrixXd::Zero(6,6);
+
+    	modelParameters.inertiaCoeff[dof].positive           = parameters(0,0);
+    	modelParameters.quadraticDampingCoeff[dof].positive  = parameters(1,0);
+    	modelParameters.linearDampingCoeff[dof].positive     = parameters(2,0);
+    	modelParameters.gravityAndBuoyancy[dof]              = parameters(3,0);
+
+    	_parameters.write(modelParameters);
+    	_relativ_error.write(error);
+
+
+/*    	while(!queueOfDyn.empty())
+    	    	{
     	    		dynamic = queueOfDyn.front();
     	    		queueOfDyn.pop();
     	    		if ((dynamic.time-last_dynamic.time) > base::Time::fromMilliseconds(100))
     	    			{
     	    				dyn_diff++;
-
     	    			}
     	    		last_dynamic = dynamic;
-
-
-
-
     	    	}
-
-
-  /*  if(doit && (t_now-new_vel)>t_5)// && (t_now-new_acc)>t_5 && (t_now-new_for)>t_5 )
-    {
-    	static int rba_rbs = 0;
-    	static int rba_force = 0;
-    	static int force_rbs = 0;
-    	while(!queueOfForces.empty() && !queueOfRBA.empty() && !queueOfRBS.empty())
-    	{
-
-    		RBS = queueOfRBS.front();
-    		RBA = queueOfRBA.front();
-    		force = queueOfForces.front();
-    		queueOfForces.pop();
-    		queueOfRBA.pop();
-    		queueOfRBS.pop();
-
-    		if(RBS.time!=RBA.time)
-    			rba_rbs++;
-    		if(RBS.time!=force.time)
-    			force_rbs++;
-    		if(RBA.time!=force.time)
-    			rba_force++;
-    		std::cout<<std::endl<< "RBA.time: "<< RBA.time <<std::endl;
-    		std::cout<<std::endl<< "RBS.time: "<< RBS.time <<std::endl;
-    		std::cout<<std::endl<< "force.time: "<< force.time <<std::endl;
-
-    	}
-	*/
-
-/*
-    	if (queueOfRBS.size()!=queueOfForces.size() || queueOfRBA.size()!=queueOfForces.size() || queueOfRBA.size()!=queueOfRBS.size())
-    		{
-    		std::cout<<std::endl<< "Number of samples of velocity, acceleration and force should be equal" <<std::endl;
-    		std::cout<<std::endl<< "queueRBS.size: "<< queueOfRBS.size() <<std::endl;
-    		std::cout<<std::endl<< "queueRBA.size: "<< queueOfRBA.size() <<std::endl;
-    		std::cout<<std::endl<< "queueforces.size: "<< queueOfForces.size() <<std::endl;
-    		}
-    	else
-    	{
-    		std::cout<<std::endl<< "number of samples in queue: "<< queueOfRBS.size() <<std::endl;
-    	//	ls_method->ls_solution(queueOfForces,queueOfRBS, queueOfRBA, parameters, error);
-
-    	//	std::cout<<std::endl<< "parameters: "<< parameters <<std::endl;
-    	//	std::cout<<std::endl<< "error: "<< error <<std::endl;
-    	}
-
 */
-    	//std::cout<<std::endl<< "dyn_diff: "<< dyn_diff <<std::endl;
-    	//std::cout<<std::endl<< "dyn_samples: "<< dyn_samples <<std::endl;
-
-    	//std::cout<<std::endl<< "force_rbs: "<< force_rbs <<std::endl;
-
-
     	doit = false;
     }
 
