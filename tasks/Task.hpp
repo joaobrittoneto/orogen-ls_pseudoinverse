@@ -42,6 +42,8 @@ namespace ls_pseudoinverse {
 	 bool doit;
 
 
+	 bool checkMeasurement(adap_samples_input::DynamicAUV sample);
+
     public:
 
 

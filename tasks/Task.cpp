@@ -69,7 +69,8 @@ void Task::updateHook()
     static int dyn_samples = 0;
     while (_dynamic_samples.read(dynamic) == RTT::NewData )
        {
-       	queueOfDyn.push(dynamic);
+    	if(checkMeasurement(dynamic))
+    		queueOfDyn.push(dynamic);
 
        	new_dyn = base::Time::now();
        	doit = true;
@@ -86,7 +87,7 @@ void Task::updateHook()
     if(doit && (t_now-new_dyn)>t_10)
        {
     	//std::cout<<std::endl<< "queuOfDyn.size: "<< queueOfDyn.size() <<std::endl;
-    	last_dynamic = queueOfDyn.front();
+    	//last_dynamic = queueOfDyn.front();
     	//static int dyn_diff = 0;
 
     	ls_method->ls_solution(queueOfDyn, parameters, error);
@@ -142,4 +143,27 @@ void Task::stopHook()
 void Task::cleanupHook()
 {
     TaskBase::cleanupHook();
+}
+
+bool Task::checkMeasurement(adap_samples_input::DynamicAUV sample)
+{
+	for(int i=0; i<3; i++)
+	{
+		if(isnan((double)sample.rbs.velocity[i]) || isnan((double)sample.rbs.angular_velocity[i]))
+		{   std::cout<<std::endl<< "velocity_nan "<< std::endl;
+			return false;
+		}
+		else if(isnan((double)sample.rba.acceleration[i]) || isnan((double)sample.ang_rba.acceleration[i]))
+		{  std::cout<<std::endl<< "acceleration_nan "<< std::endl;
+			return false;
+		}
+	}
+	for(int i=0; i<sample.joints.elements.size(); i++)
+	{
+		if(isnan((double)sample.joints.elements[i].effort))
+		{   std::cout<<std::endl<< "force_nan "<< std::endl;
+			return false;
+		}
+	}
+	return true;
 }
